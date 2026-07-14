@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import math
+from config import BALL_RADIUS_LOWER, BALL_RADIUS_UPPER
 
 def detectBall(frame):
     _, transformToBinary = cv2.threshold(frame, 180, 255, cv2.THRESH_BINARY)
@@ -14,9 +15,7 @@ def detectBall(frame):
     if areaOfTarget < 200 or areaOfTarget > 5:
         circumference = cv2.arcLength(contours, True)
         circularity = (4*math.pi*areaOfTarget)/ (circumference**2)
-        
-
-
-
-
-    
+        (x,y), rad = cv2.minEnclosingCircle(contours)
+        if abs(1-circularity) < 0.1:
+            if (rad < BALL_RADIUS_UPPER) and (rad > BALL_RADIUS_LOWER):
+                print(f"Coordinates: {x,y}\n Radius: {rad}")
