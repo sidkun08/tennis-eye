@@ -4,7 +4,7 @@ from queue import Queue
 from threading import Thread
 import time
 
-leftCamera = cv2.VideoCapture(0)
+leftCamera = cv2.VideoCapture(1)
 leftCamFrameQueue = Queue()
 
 while True:
