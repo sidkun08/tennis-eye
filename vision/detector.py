@@ -1,35 +1,78 @@
 import cv2
 import numpy as np
 import math
-from config import BALL_RADIUS_LOWER, BALL_RADIUS_UPPER
-from detectorFunctions import checkLargestSize
+from ballObject import TennisBall
 
 def detectBall(frame):
-    ballDictionary = {}
+    possibleBalls = []
     _, transformToBinary = cv2.threshold(frame, 180, 255, cv2.THRESH_BINARY)
     kernel = np.ones((3,3), np.uint8)
-    reduceNoiseFrame = cv2.morphologyEx(frame, cv2.MORPH_OPEN, kernel)
-    reduceNoiseFrame = cv2.morphologyEx(reduceNoiseFrame, cv2.MORPH_CLOSE, kernel)
+    reduceNoiseFrame = cv2.morphologyEx(transformToBinary, cv2.MORPH_OPEN, kernel)
+    reduceNoiseFrame = cv2.morphologyEx(transformToBinary, cv2.MORPH_CLOSE, kernel)
+
     contours, _ = cv2.findContours(reduceNoiseFrame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    areaOfTarget = cv2.contourArea(contours)
+    focal_length_px = (1920 / 2) / math.tan((120/2))
 
-    if areaOfTarget < 200 or areaOfTarget > 5:
-        circumference = cv2.arcLength(contours, True)
-        circularity = (4*math.pi*areaOfTarget)/ (circumference**2)
-        (x,y), rad = cv2.minEnclosingCircle(contours)
-        if abs(1-circularity) < 0.1:
-            if (rad < BALL_RADIUS_UPPER) and (rad > BALL_RADIUS_LOWER):
-                ballDictionary["center_x"] = x
-                ballDictionary["center_y"] = y
-                ballDictionary["radius"] = rad
     
-    if len(ballDictionary) > 1:
-        value = checkLargestSize(ballDictionary)
-        x = ballDictionary.get(value)[0]
-        y = ballDictionary.get(value)[1]
-        rad = ballDictionary.get(value)[2]
-        return (x, y), rad
+    bestBall = None
+    for contour in contours:
+        areaOfTarget = cv2.contourArea(contour)
+
+        if areaOfTarget < 300 and areaOfTarget > 10:
+            circumference = cv2.arcLength(contour, True)
+            if circumference > 0:
+                circularity = (4*math.pi*areaOfTarget)/ (circumference**2)
+                (x, y), (width, height), angle = cv2.minAreaRect(contour)
+                estimated_diameter = min(width, height)
+                aspect_ratio = max(width, height)/min(width, height)
+                distance = 12
+                rad = (0.067*focal_length_px) / distance
+                if circularity > 0.9:
+                    if (rad < 4.8) and (rad > 0.8):
+                        possibleBall = TennisBall(x, y, rad, contour, circularity)
+                        possibleBalls.append(possibleBall)
+
+    print(possibleBalls)
+
+    if len(possibleBalls) > 1:
+        closestToOne = possibleBalls[0].getCircularity()
+        bestBall = possibleBalls[0]
+        for i in range(1, len(possibleBalls)):
+            initialCircularity = possibleBalls[i].getCircularity()
+            if (initialCircularity > closestToOne):
+                closestToOne = initialCircularity
+                bestBall = possibleBalls[i]
+
+        return bestBall
+
+    elif len(possibleBalls) == 1:
+        bestBall = possibleBalls[0]
+        return bestBall
+    
     else:
-        return (x, y), rad
-        
+        return bestBall
+    
+
+cap = cv2.VideoCapture('IMG_0330.MOV')
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # skip if footage is already mono
+
+    ball = detectBall(gray)  # <-- this is the call
+
+    if ball is not None:
+        x, y, r, c = int(ball.getX()), int(ball.getY()), int(ball.getRadius()), (ball.getCircularity())
+        print(x, y, r, c)
+        cv2.circle(frame, (x, y), r, (0, 0, 255), 2)  # draw on the color frame so it's visible
+    cv2.imshow("frame", frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
