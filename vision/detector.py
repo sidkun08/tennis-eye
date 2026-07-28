@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import math
-from ballObject import TennisBall
+from objects.ballObject import TennisBall
 
 def detectBall(frame):
     possibleBalls = []
@@ -59,28 +59,3 @@ def detectBall(frame):
         bestBall = possibleBalls[0]
     
     return bestBall
-
-
-cap = cv2.VideoCapture("IMG_0386.MOV")
-
-while cap.isOpened():
-    ret, frame = cap.read()
-    if not ret:
-        break
-
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # skip if footage is already mono
-
-    ball = detectBall(gray)  # <-- this is the call
-
-    if ball is not None:
-        x, y, r = int(ball.getX()), int(ball.getY()), int(ball.getRadius())
-        cv2.circle(frame, (x, y), r, (0, 0, 255), 2)  # draw on the color frame so it's visible
-        print(x, y, r)
-
-    cv2.imshow("frame", frame)
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
