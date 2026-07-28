@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import math
-from objects.ballObject import TennisBall
+from ballObject import TennisBall
 
 def detectBall(frame):
     possibleBalls = []
