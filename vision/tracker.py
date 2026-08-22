@@ -1,34 +1,37 @@
 import cv2
 from trackerClass import Tracker
-from detector import detectBall, changeObj
-import time
+from detector import detectBall
+
 def flight_path(tracker, ball):
+    trajs = tracker.getTrajectory()
     if ball is not None:
-        tracker.update((ball.getX(), ball.getY()))
+        ball_coords = (ball.getX(), ball.getY())
+        ball_id = ball.getId()
+        tracker.update(ball_coords)
+        tracker.track_continuity(ball_coords, ball_id)
+        check = isMoving(trajs, ball)
+        if check == True:
+            return {"positions": tracker.getTrajectory(),
+            "current_position": tracker.getCurrent(),
+            "velocity": tracker.getVelocity(),
+            "missed_frames": tracker.getMissedFrames(),
+            "id": ball.getId()
+            }
+        else:
+            tracker.update(None)
+            tracker.predict()
 
-    else:
-        tracker.update(None)
-        tracker.predict()
+def isMoving(trajectories, ball):
+    prev = tracker.getPrevious()
+    curr = tracker.getCurrent()
+    if prev is not None and curr is not None:
+        if (abs(prev[0] - curr[0]) < 5):
+            if (abs(prev[1] - curr[1]) < 5):
+                tracker.alter_trajectory(curr, prev, 1)
+                return False
+        return True
 
-    return {"positions": tracker.getTrajectory(),
-                "current_position": tracker.getCurrent(),
-                "velocity": tracker.findVelocity(),
-                "missed_frames": tracker.getMissedFrames()
-                }
-
-def checkForTrajectory(tracker):
-    trajectories = tracker.getTrajectory()
-    length = len(trajectories)
-    if length > 3:
-        prev_x, prev_y = trajectories[length-2]
-        curr_x, curr_y = trajectories[length-1]
-        print(curr_x)
-        diff_x = abs(prev_x - curr_x)
-        if diff_x > 100:
-            print("yo")
-            trajectories.remove(trajectories[length-1])
-
- 
+    return 
 
 def draw_overlay(display_frame, result):
     if result is None or result.get("current_position") is None:
@@ -45,9 +48,9 @@ def draw_overlay(display_frame, result):
     missed = result.get("missed_frames")
     cv2.putText(display_frame, f"{label}  vel=({vx:.1f},{vy:.1f})  missed={missed}",
                 (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
- 
 
-cap = cv2.VideoCapture("IMG_0386.MOV")
+
+cap = cv2.VideoCapture("IMG_3369 2.mov")
 tracker = Tracker()
 count = 0
 while cap.isOpened():
@@ -55,13 +58,8 @@ while cap.isOpened():
     if not ret:
         break
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # skip if footage is already mono
-
     ball = detectBall(gray)
     tracking = flight_path(tracker, ball)
-    count += 1
-    checkForTrajectory(tracker)
-
-    
     display_frame = frame.copy()
     draw_overlay(display_frame, tracking)
     
@@ -72,7 +70,7 @@ while cap.isOpened():
         cv2.circle(frame, (x, y), r, (0, 0, 255), 2)  # draw on the color frame so it's visible
         print(x, y, r, id, circ)
         
-    if cv2.waitKey(200) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
         
 cap.release()

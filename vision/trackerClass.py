@@ -1,4 +1,5 @@
 import numpy as np
+import json
 
 class Tracker:
     def __init__(self):
@@ -7,7 +8,9 @@ class Tracker:
         self.velocity = (0,0)
         self.trajectory = []
         self.missedFrames = 0
-        self.predicted = False
+        self.markPos = None
+        self.continuity = {}
+        self.frame_count = 0
 
     def getPrevious(self):
         return self.previousPos
@@ -18,20 +21,20 @@ class Tracker:
     def getTrajectory(self):
         return list(self.trajectory)
 
+    def getContinuity(self):
+        return dict(self.continuity)
     
     def reset(self):
-
-        self.previousPos = None
-        self.currentPos = None
-        self.velocity = (0, 0)
-        self.trajectory = []
-        self.missedFrames = 0
-
-
+       return self.__init__()
     
     def getMissedFrames(self):
         return self.missedFrames
-    
+
+    def getVelocity(self):
+        return self.velocity
+
+    def get_frame_count(self):
+        return self.frame_count
     
     def update(self, coords):
         if coords is None:
@@ -40,15 +43,44 @@ class Tracker:
         self.missedFrames = 0
         self.trajectory.append(coords)
         numOfPos = len(self.trajectory)
-        if numOfPos > 3:
+        if numOfPos > 1:
             self.previousPos = self.trajectory[numOfPos-2]
             self.currentPos = self.trajectory[numOfPos-1]
             self.findVelocity()
         elif numOfPos == 1:
             self.currentPos = self.trajectory[numOfPos-1]
 
+        self.frame_count += 1
         return self.trajectory
-    
+
+    def track_continuity(self, coords, id):
+        self.continuity[coords] = id
+        return self.continuity
+
+
+    def alter_trajectory(self, coords_to_be_del, coord_to_save, frame_number):
+        if coords_to_be_del is None or coord_to_save is None:
+            return 
+
+        self.currentPos = coord_to_save
+        self.delete_coords(coords_to_be_del)
+        '''
+        with open('deleted_coords.json') as file:
+            info = json.load(file)
+        info.append({frame_number: coords_to_be_del})
+        with open('deleted_coords.json', "w+") as file:
+            dumped = json.dump(file, info, indent=4)
+        '''
+        print("smth")
+        return self.currentPos
+
+    def delete_coords(self, coords):
+        self.trajectory.remove(coords)
+        return self.trajectory
+
+    def get_mark_pos(self):
+        return self.markPos
+
     def findVelocity(self):
         if self.previousPos is None:
             return self.velocity 
@@ -68,5 +100,11 @@ class Tracker:
         currentPos = self.getCurrent()
         Lx, Ly = currentPos
         self.currentPos = ((Lx + self.velocity[0]), (Ly + self.velocity[1]))
-        self.predicted = True
         return self.currentPos
+
+
+    def getPredicted(self):
+        Lx, Ly = self.getCurrent()
+        velocity = self.findVelocity()
+        predicedPos = (Lx + velocity[0]), (Ly + velocity[1])
+        return predicedPos

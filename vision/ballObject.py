@@ -1,11 +1,11 @@
 class TennisBall:
-    def __init__(self, center_x, center_y, radius, contour, circularity, id):
+    def __init__(self, center_x, center_y, radius, contour, circularity):
         self.center_x = center_x
         self.center_y = center_y
         self.radius = radius
         self.contour = contour
         self.circularity = circularity
-        self.id = id
+        self.id = 1
 
     def getRadius(self):
         return self.radius
@@ -23,7 +23,5 @@ class TennisBall:
         return self.circularity
 
     def getId(self):
+        self.id += 1
         return self.id
-
-    
-    
