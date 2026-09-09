@@ -5,7 +5,7 @@ class TennisBall:
         self.radius = radius
         self.contour = contour
         self.circularity = circularity
-        self.id = 1
+        self.id = 0
 
     def getRadius(self):
         return self.radius
@@ -22,6 +22,10 @@ class TennisBall:
     def getCircularity(self):
         return self.circularity
 
+
+    def incrementId(self):
+        self.id+=1
+        return self.id
+    
     def getId(self):
-        self.id += 1
         return self.id

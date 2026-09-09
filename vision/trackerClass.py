@@ -57,23 +57,6 @@ class Tracker:
         self.continuity[coords] = id
         return self.continuity
 
-
-    def alter_trajectory(self, coords_to_be_del, coord_to_save, frame_number):
-        if coords_to_be_del is None or coord_to_save is None:
-            return 
-
-        self.currentPos = coord_to_save
-        self.delete_coords(coords_to_be_del)
-        '''
-        with open('deleted_coords.json') as file:
-            info = json.load(file)
-        info.append({frame_number: coords_to_be_del})
-        with open('deleted_coords.json', "w+") as file:
-            dumped = json.dump(file, info, indent=4)
-        '''
-        print("smth")
-        return self.currentPos
-
     def delete_coords(self, coords):
         self.trajectory.remove(coords)
         return self.trajectory
@@ -105,6 +88,6 @@ class Tracker:
 
     def getPredicted(self):
         Lx, Ly = self.getCurrent()
-        velocity = self.findVelocity()
+        velocity = self.getVelocity()
         predicedPos = (Lx + velocity[0]), (Ly + velocity[1])
         return predicedPos
