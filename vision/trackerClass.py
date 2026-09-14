@@ -9,8 +9,6 @@ class Tracker:
         self.trajectory = []
         self.missedFrames = 0
         self.markPos = None
-        self.continuity = {}
-        self.frame_count = 0
 
     def getPrevious(self):
         return self.previousPos
@@ -20,9 +18,6 @@ class Tracker:
     
     def getTrajectory(self):
         return list(self.trajectory)
-
-    def getContinuity(self):
-        return dict(self.continuity)
     
     def reset(self):
        return self.__init__()
@@ -33,9 +28,13 @@ class Tracker:
     def getVelocity(self):
         return self.velocity
 
-    def get_frame_count(self):
-        return self.frame_count
-    
+
+    def getDy(self):
+        return self.velocity[1]
+
+    def getDx(self):
+        return self.velocity[0]
+
     def update(self, coords):
         if coords is None:
             self.missedFrames += 1
