@@ -8,9 +8,9 @@ def flight_path(tracker, ball):
         ball_id = ball.getId()
         tracker.update(ball_coords)
         tracker.track_continuity(ball_coords, ball_id)
-        check = isMoving()
+        check = isMoving(tracker)
         if check == True:
-            return {"positions": tracker.getTrajectory()[0],
+            return {"positions": tracker.getTrajectory(),
             "current_position": tracker.getCurrent(),
             "velocity": tracker.getVelocity(),
             "missed_frames": tracker.getMissedFrames(),

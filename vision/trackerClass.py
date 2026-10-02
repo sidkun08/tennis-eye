@@ -81,7 +81,9 @@ class Tracker:
         
         currentPos = self.getCurrent()
         Lx, Ly = currentPos
+        self.previousPos = self.currentPos
         self.currentPos = ((Lx + self.velocity[0]), (Ly + self.velocity[1]))
+        self.trajectory.append(self.currentPos)
         return self.currentPos
 
 

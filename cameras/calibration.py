@@ -1,18 +1,14 @@
 import cv2
-from camera_left import leftCamFrameQueue
-from camera_right import rightCamFrameQueue
-from config import FRAMES_PER_SECTION
-from queue import Queue
+import numpy as np
 
-fixedleftCamFrameQue = Queue()
-fixedrightCamFrameQue = Queue()
+def getCalibratedMatrix(frame):
+    grayscale = cv2.colorChange(frame, cv2.COLOR_BGR2GRAY)
+    found, corners = cv2.findChessboardCorners(grayscale, (9, 6))
 
-num = 0
-while num < FRAMES_PER_SECTION:
-    timestampL, frameLeft = leftCamFrameQueue.get()
-    cv2.calibrateCamera(frameLeft)
-    timestampR, frameRight = rightCamFrameQueue.get() 
-    num+=1
-
-    
-    
+    if found:
+        winzone = (11, 11)
+        zeroZone = (-1, -1)
+        criteria = (cv2.TermCriteria_EPS + cv2.TermCriteria_MAX_ITER, 30, 0.001)
+        corners = cv2.cornerSubPix(grayscale, corners, winzone, zeroZone, criteria)
+        
+        
