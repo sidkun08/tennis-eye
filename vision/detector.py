@@ -7,17 +7,17 @@ import random
 def detectBall(frame):
     possibleBalls = []
     id = 0
-    _, transformToBinary = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    _, transformToBinary = cv2.threshold(frame, 120, 255, cv2.THRESH_BINARY)
     kernel = np.ones((3,3), np.uint8)
     reduceNoiseFrame = cv2.morphologyEx(transformToBinary, cv2.MORPH_OPEN, kernel)
     reduceNoiseFrame = cv2.morphologyEx(reduceNoiseFrame, cv2.MORPH_CLOSE, kernel)
     
 
-    contours, _ = cv2.findContours(transformToBinary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(reduceNoiseFrame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in contours:
         contourArea = cv2.contourArea(contour)
-        if contourArea < 170 and contourArea > 20:
+        if contourArea < 140 and contourArea > 20:
             perimeter = cv2.arcLength(contour, closed=True)
 
             if perimeter <= 0:
@@ -51,13 +51,14 @@ def detectBall(frame):
 
 
     
-    if len(possibleBalls) > 2:
+    if len(possibleBalls) > 1:
         for i in range(1, len(possibleBalls)):
             circ = possibleBalls[i-1].getCircularity()
             if circ > maxCircularity:
                 maxCircularity = circ
-                bestBall = possibleBalls[i]
+                bestBall = possibleBalls[i-1]
     
     if len(possibleBalls) == 1:
         bestBall = possibleBalls[0]
     return bestBall
+

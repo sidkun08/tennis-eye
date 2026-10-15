@@ -1,56 +1,74 @@
-import numpy as np
-import cv2
-
 class CourtModel:
+    COURT_LENGTH = 23.77
+    SINGLES_WIDTH = 8.23
+    SERVICE_LINE_DISTANCE = 6.40
+
     def __init__(self):
-        # Standard tennis court dimensions in meters
-        # Origin (0,0) is placed at the center of the net
-        self.half_length = 23.77 / 2  # 11.885m
-        self.singles_half_width = 8.23 / 2  # 4.115m
-        self.doubles_half_width = 10.97 / 2 # 5.485m
-        
-        self.homography_matrix = None
+        self.half_length = self.COURT_LENGTH / 2
+        self.singles_half_width = self.SINGLES_WIDTH / 2
 
-    def calibrate(self, image_points, court_points):
-        """
-        Calculates the transformation matrix.
-        image_points: List of (x, y) pixel coordinates from the camera feed.
-        court_points: List of corresponding (x, y) real-world coordinates in meters.
-        (Requires a minimum of 4 points, e.g., net post and line intersections)
-        """
-        src_pts = np.array(image_points, dtype=np.float32).reshape(-1, 1, 2)
-        dst_pts = np.array(court_points, dtype=np.float32).reshape(-1, 1, 2)
-        
-        # cv2.RANSAC filters out minor inaccuracies in manual point clicking
-        self.homography_matrix, status = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-        
-        return self.homography_matrix is not None
+    def court_corners(self, mode="singles"):
+        half_width = self.singles_half_width
+        return [
+            (-half_width, -self.half_length),
+            (half_width, -self.half_length),
+            (half_width, self.half_length),
+            (-half_width, self.half_length),
+        ]
 
-    def pixel_to_court_coord(self, pixel_x, pixel_y):
-        """
-        Warps a bounce pixel coordinate into a real-world metric coordinate.
-        """
-        if self.homography_matrix is None:
-            raise ValueError("Court not calibrated. Run calibrate() first.")
-            
-        # Format for cv2 perspective transform
-        pts = np.array([[[float(pixel_x), float(pixel_y)]]])
-        real_world_pt = cv2.perspectiveTransform(pts, self.homography_matrix)
-        
-        return real_world_pt[0][0][0], real_world_pt[0][0][1]
+    def point_in_court(self, x, y):
+        return abs(x) <= self.singles_half_width and abs(y) <= self.half_length
 
-    def is_in(self, bounce_x, bounce_y, match_type="singles"):
+    def point_in_boundary(self, x, y, boundary_points):
+        """Point-in-polygon test for an arbitrary boundary.
+
+        boundary_points should be a sequence of (x, y) vertices in order.
         """
-        Determines if the calculated bounce coordinate is inbounds.
-        Assumes x is the length of the court and y is the width.
-        """
-        # Check if length is past the baseline
-        if abs(bounce_x) > self.half_length:
-            return False
-            
-        # Check width based on match type
-        max_width = self.singles_half_width if match_type == "singles" else self.doubles_half_width
-        if abs(bounce_y) > max_width:
-            return False
-            
-        return True
+        vertices = list(boundary_points)
+        if len(vertices) < 3:
+            raise ValueError("A boundary must have at least 3 vertices.")
+
+        inside = False
+        j = len(vertices) - 1
+        for i in range(len(vertices)):
+            xi, yi = vertices[i]
+            xj, yj = vertices[j]
+
+            crossing = ((yi > y) != (yj > y)) and (
+                x < (xj - xi) * (y - yi) / (yj - yi) + xi
+            )
+            if crossing:
+                inside = not inside
+            j = i
+
+        return inside
+
+    def court_lines(self, mode="singles"):
+        """Return named (start, end) line segments for the specified court."""
+        half_width = self._boundary_half_width(mode)
+        outer_width = self.doubles_half_width
+        lines = {
+            "left_baseline": ((-half_width, -self.half_length), (half_width, -self.half_length)),
+            "right_baseline": ((-half_width, self.half_length), (half_width, self.half_length)),
+            "left_singles_sideline": (
+                (-self.singles_half_width, -self.half_length),
+                (-self.singles_half_width, self.half_length),
+            ),
+            "right_singles_sideline": (
+                (self.singles_half_width, -self.half_length),
+                (self.singles_half_width, self.half_length),
+            ),
+            "left_service_line": (
+                (-self.singles_half_width, -self.SERVICE_LINE_DISTANCE),
+                (self.singles_half_width, -self.SERVICE_LINE_DISTANCE),
+            ),
+            "right_service_line": (
+                (-self.singles_half_width, self.SERVICE_LINE_DISTANCE),
+                (self.singles_half_width, self.SERVICE_LINE_DISTANCE),
+            ),
+            "center_service_line": (
+                (0, -self.SERVICE_LINE_DISTANCE),
+                (0, self.SERVICE_LINE_DISTANCE),
+            ),
+        }
+        return lines

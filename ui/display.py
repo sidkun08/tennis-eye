@@ -23,7 +23,7 @@ NOTE: PySide6 must be installed (`pip install PySide6`). It could not be
 imported/run in this sandbox since PySide6 isn't available here -- test
 it for real on your actual machine. The import is wrapped so this file
 can still be *read* and its non-PySide6 pieces reasoned about even
-without PySide6 present.
+without PySide6 present
 """
 
 import sys
@@ -142,21 +142,3 @@ def run_app(window_title="Tennis VAR - Scoreboard"):
     window = ScoreboardDisplay(window_title)
     window.show()
     return app, window
-
-
-if __name__ == "__main__":
-    # Quick manual test: run this file directly (with PySide6 installed)
-    # to see the scoreboard window with a fake score fed into it.
-    if not _PYSIDE6_AVAILABLE:
-        print("PySide6 is not installed in this environment -- install it "
-              "and re-run this file to visually test the scoreboard window.")
-    else:
-        from scoring import score_manager
-
-        app, window = run_app()
-
-        sm = ScoreManager(on_score_change=window.update_score)
-        window.update_decision_status("OUT")
-        sm.handle_line_call(is_out=True, hitter="player")
-
-        sys.exit(app.exec())
