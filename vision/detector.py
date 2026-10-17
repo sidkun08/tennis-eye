@@ -52,11 +52,11 @@ def detectBall(frame):
 
     
     if len(possibleBalls) > 1:
-        for i in range(1, len(possibleBalls)):
-            circ = possibleBalls[i-1].getCircularity()
+        for i in range(len(possibleBalls)):
+            circ = possibleBalls[i].getCircularity()
             if circ > maxCircularity:
                 maxCircularity = circ
-                bestBall = possibleBalls[i-1]
+                bestBall = possibleBalls[i]
     
     if len(possibleBalls) == 1:
         bestBall = possibleBalls[0]
