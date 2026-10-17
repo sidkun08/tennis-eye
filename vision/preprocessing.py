@@ -4,7 +4,7 @@ import numpy as np
 court_boundaries = np.array([["x1", "y1"],
                              ["x2", "y2"],
                              ["x3", "y3"],
-                             ["x4", "y4"]], dtype=np.int32)
+                             ["x4", "y4"]], dtype=np.int32) # TODO: Once obtained true camera film, with corners, will repalce placeholders.
 
 def create_court_mask(frame_shape, polygon_points):
     h, w = frame_shape[:2]
@@ -12,15 +12,14 @@ def create_court_mask(frame_shape, polygon_points):
     cv2.fillPoly(mask, [polygon_points], 255)
     return mask
 
-court_mask = None
-def gated_mask(frame, fgbg):
-    global court_mask
-    if court_mask is None:
-        court_mask = create_court_mask(frame.shape, court_boundaries)
+fgbg_left = cv2.createBackgroundSubtractorMOG2(history=200, detectShadows=False, varThreshold=16)
+fgbg_right = cv2.createBackgroundSubtractorMOG2(history=200, detectShadows=False, varThreshold=16)
 
+def gated_mask(frame, fgbg, court_mask):
     fg_mask = fgbg.apply(frame)
     gated_fgmask = cv2.bitwise_and(fg_mask, fg_mask, mask=court_mask)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
     gated_fgmask = cv2.morphologyEx(gated_fgmask, cv2.MORPH_OPEN, kernel)
+    processed = cv2.bitwise_and(frame, frame, mask=gated_fgmask)
 
-    return gated_fgmask
+    return processed
