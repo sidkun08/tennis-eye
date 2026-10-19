@@ -53,8 +53,7 @@ def reprojection_errors(H, image_points, court_points):
     return np.linalg.norm(est - true, axis=1)
 
 
-def get_transformed_coords(img_coords, real_world_coords, bounce_coords):
+def get_transformed_coords(H, bounce_coords):
     """Original one-shot interface. Rebuilds H on every call, so use
     build_homography() once and image_to_court() per bounce instead."""
-    H, _ = build_homography(img_coords, real_world_coords)
     return image_to_court(H, bounce_coords)
