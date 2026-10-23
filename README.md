@@ -2,9 +2,8 @@
 
 An amateur line-calling project built on a Raspberry Pi 5 and two OV9281 global-shutter cameras. It watches a tennis ball, works out where it bounced, and decides whether it was in or out. Scorekeeping comes along for the ride.
 
-> **Status: work in progress.** Nothing here has been validated on a real court yet. Treat any feature as unfinished until it has been tested on the actual hardware.
 
-## What it's meant to do
+## What it does
 
 - Capture frames from two cameras, each watching one half of the court.
 - Detect and track the ball across frames.
@@ -14,7 +13,7 @@ An amateur line-calling project built on a Raspberry Pi 5 and two OV9281 global-
 - Keep score, and handle net contacts later on.
 - Save an image of each event and eventually show the score and camera feed on a screen.
 
-I'm starting with **singles only**. Doubles can come once singles works.
+I'm starting with **singles only**.
 
 ## How it fits together
 
@@ -32,7 +31,7 @@ Preprocessing undistorts the frame and blanks out everything that isn't moving i
 - Two InnoMaker OV9281 monochrome global-shutter cameras
 - Matching cables and a decent power supply
 - microSD card with Raspberry Pi OS
-- Optional screen for the score and camera feed
+- LCD screen for the score display
 
 Before you assemble anything, check which interface your cameras use, that the drivers exist for your OS version, the cable orientation, power draw, and the frame rates they really support. A camera that can do 300+ fps doesn't mean the Pi can capture, detect, and track at that rate, so expect to run slower and find the ceiling by testing.
 
@@ -41,7 +40,6 @@ Before you assemble anything, check which interface your cameras use, that the d
 - Python 3
 - OpenCV (`cv2`) and NumPy for the core work
 - PySide6 for the scoreboard window (if I build it)
-- SQLite for event storage (if I build it)
 - SciPy, FilterPy, and Shapely only if a module ends up needing them
 
 Only install what the code actually imports. Camera access depends on the Pi OS version and the camera interface, so don't assume `cv2.VideoCapture()` will just work. Check that first.
@@ -154,12 +152,8 @@ Until the system has been checked against real ground truth, treat its calls as 
 
 ## A note on use
 
-This is an experimental hobby project, not a certified officiating system. Use it as an aid for practice and casual play, and agree with the other players beforehand what happens with a call the system marks as uncertain.
+This is an experimental project, not a certified officiating system. Use it as an aid for practice and casual play, and agree with the other players beforehand what happens with a call the system marks as uncertain.
 
 ## Contributing
 
 Keep each module to one job, write down any config changes, and test against recorded frames or clips before taking a change onto the court.
-
-## License
-
-No license picked yet. Add one before sharing the project publicly.
