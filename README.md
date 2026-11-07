@@ -60,11 +60,7 @@ Only install what the code actually imports. Camera access depends on the Pi OS 
 | `bounce_detector.py` | Decides when a bounce happened and where |
 | `line_decision.py` | IN / OUT / UNCERTAIN, taking ball radius and measurement error into account |
 | `match_state.py`, `score_rules.py`, `score_manager.py` | Score data, scoring rules, and the code that applies line calls to the score |
-| `net_call.py` | Net-contact handling (planned) |
 | `display.py` | Scoreboard and feed display |
-
-Some of these don't exist yet, and the list will change as I go. I try to keep this table in step with the repo.
-
 ## Coordinates and calibration
 
 Everything is in meters, with the origin at the **center of the net on the court surface**:
